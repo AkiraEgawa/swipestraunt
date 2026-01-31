@@ -9,6 +9,6 @@ const config: Config = {
   daisyui: { // Ignore this red line, React is tripping
     themes: ["light", "dark"],
   },
-}
+} as unknown as Config
 
 export default config
