@@ -1,18 +1,27 @@
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
-  req: Request,
-  ctx: { params: Promise<{ roomId: string }> } // note Promise
+  req: NextRequest,
+  { params }: { params: { roomId: string } }
 ) {
-  // unwrap the promise first
-  const { roomId } = await ctx.params;
+  const roomId = params?.roomId;
+
+  if (!roomId) {
+    return NextResponse.json(
+      { error: "Missing roomId in URL" },
+      { status: 400 }
+    );
+  }
 
   try {
     const { userId } = await req.json();
 
     if (!userId) {
-      return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "User ID is required" },
+        { status: 400 }
+      );
     }
 
     // Check if room exists
@@ -38,6 +47,9 @@ export async function POST(
     return NextResponse.json({ message: "Joined room successfully" });
   } catch (err) {
     console.error("🔥 Join Room Error:", err);
-    return NextResponse.json({ error: "Failed to join room" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to join room" },
+      { status: 500 }
+    );
   }
 }

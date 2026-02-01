@@ -1,35 +1,22 @@
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(
-  req: Request,
-  ctx: { params: Promise<{ roomId: string }> }
-) {
+export async function GET(req: NextRequest) {
+  const url = new URL(req.url);
+  const pathParts = url.pathname.split("/"); // e.g. ["", "api", "rooms", "ROOM_ID", "restaurants"]
+  const roomId = pathParts[3]; // get the [roomId] part
+
+  if (!roomId) return NextResponse.json({ restaurants: [] });
+
   try {
-    const { roomId } = await ctx.params;
-
-    if (!roomId) {
-      return NextResponse.json({ error: "No room ID provided" }, { status: 400 });
-    }
-
-    // fetch room
-    const room = await prisma.room.findUnique({
-      where: { id: roomId },
-    });
-
-    if (!room) {
-      return NextResponse.json({ error: "Room not found" }, { status: 404 });
-    }
+    const room = await prisma.room.findUnique({ where: { id: roomId } });
+    if (!room) return NextResponse.json({ restaurants: [] });
 
     const { lat, lon, range } = room;
-
-    if (lat == null || lon == null) {
-      return NextResponse.json({ error: "Room does not have coordinates" }, { status: 400 });
-    }
+    if (lat == null || lon == null) return NextResponse.json({ restaurants: [] });
 
     const radiusMeters = (typeof range === "number" ? range : 5) * 1000;
 
-    // --- Overpass API query ---
     const overpassQuery = `
 [out:json];
 (
@@ -39,19 +26,20 @@ export async function GET(
 out center;
 `;
 
-    const overpassRes = await fetch("https://overpass-api.de/api/interpreter", {
-      method: "POST",
-      headers: { "Content-Type": "text/plain" },
-      body: overpassQuery,
-    });
+    const overpassRes = await fetch(
+      "https://overpass-api.de/api/interpreter",
+      {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: overpassQuery,
+      }
+    );
 
-    if (!overpassRes.ok) {
-      return NextResponse.json({ error: "Failed to fetch restaurants" }, { status: 502 });
-    }
+    if (!overpassRes.ok) return NextResponse.json({ restaurants: [] });
 
     const overpassData = await overpassRes.json();
 
-    const restaurants = overpassData.elements
+    const restaurants = (overpassData.elements ?? [])
       .filter((el: any) => el.tags?.name)
       .map((el: any) => ({
         id: el.id,
@@ -64,6 +52,6 @@ out center;
     return NextResponse.json({ restaurants });
   } catch (err) {
     console.error("🔥 FETCH RESTAURANTS ERROR:", err);
-    return NextResponse.json({ error: "Failed to fetch restaurants" }, { status: 500 });
+    return NextResponse.json({ restaurants: [] });
   }
 }
