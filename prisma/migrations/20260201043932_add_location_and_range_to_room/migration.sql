@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Room" ADD COLUMN     "location" TEXT NOT NULL DEFAULT 'Unknown',
+ADD COLUMN     "range" DOUBLE PRECISION NOT NULL DEFAULT 5;
