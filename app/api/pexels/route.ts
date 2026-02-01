@@ -7,7 +7,7 @@ export async function GET(req: Request) {
 
     const res = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=1`, {
       headers: {
-        Authorization: process.env.PEXELS_API_KEY!, // server-only
+        Authorization: process.env.NEXT_PUBLIC_PEXELS_API_KEY!, // server-only
       },
     });
 
