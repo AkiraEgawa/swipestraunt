@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
-import RestList from "./restList"
 import RestaurantSwiper from "./RestaurantSwiper";
 
 type Room = {
