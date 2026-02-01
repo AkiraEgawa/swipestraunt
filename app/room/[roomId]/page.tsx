@@ -12,11 +12,11 @@ type Room = {
 };
 
 export default function RoomPage() {
-  const searchParams = useSearchParams()
+  const searchParams = useSearchParams();
   const router = useRouter();
   const params = useParams();
   console.log(params);
-  const userId = searchParams.get("userId") 
+  const userId = searchParams.get("userId");
   const roomId = params?.roomId;
 
   const [room, setRoom] = useState<Room | null>(null);
@@ -38,26 +38,25 @@ export default function RoomPage() {
   }, [roomId]);
 
   const handleCloseRoom = async () => {
-  console.log("roomId", roomId)
-  if (!roomId) {
-    alert("Room ID not available yet!");
-    return;
-  }
-
-  try {
-    const res = await fetch(`/api/rooms/${roomId}`, { method: "DELETE" });
-
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data?.error || "Failed to close room");
+    console.log("roomId", roomId);
+    if (!roomId) {
+      alert("Room ID not available yet!");
+      return;
     }
 
-    router.push(`/create-room?userId=${userId}`); // back to creation page
-  } catch (err: any) {
-    alert(err.message);
-  }
-  };
+    try {
+      const res = await fetch(`/api/rooms/${roomId}`, { method: "DELETE" });
 
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data?.error || "Failed to close room");
+      }
+
+      router.push(`/create-room?userId=${userId}`); // back to creation page
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
 
   if (!roomId) return <p className="text-red-500">No room ID provided</p>;
   if (loading) return <p>Loading room...</p>;
@@ -65,17 +64,26 @@ export default function RoomPage() {
   if (!room) return <p>Room not found</p>;
 
   return (
-  <div className="min-h-screen flex justify-center">
-    <div className="max-w-xl w-full mx-auto text-black">
-      <h1 className="text-black font-bold mb-4">Room {room.id}</h1>
+    <div className="min-h-screen flex justify-center">
+      <div className="max-w-xl w-full mx-auto text-black">
+        {/* Room header with copy button */}
+        <h1 className="text-black font-bold mb-4 flex items-center gap-2">
+          Room {room.id}
+          <button
+            onClick={() => navigator.clipboard.writeText(room.id)}
+            className="px-2 py-1 bg-gray-200 rounded border border-gray-400 hover:bg-gray-300 transition"
+            title="Copy Room ID"
+          >
+            Copy
+          </button>
+        </h1>
 
-      <button className="btn btn-error mb-4" onClick={handleCloseRoom}>
-        Close Room
-      </button>
+        <button className="btn btn-error mb-4" onClick={handleCloseRoom}>
+          Close Room
+        </button>
 
-      <RestaurantSwiper roomId={room.id} userId={userId!} />
+        <RestaurantSwiper roomId={room.id} userId={userId!} />
+      </div>
     </div>
-  </div>
-);
-
+  );
 }
