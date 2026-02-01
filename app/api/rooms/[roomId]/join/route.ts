@@ -1,22 +1,21 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { roomId: string } }
-) {
-  const roomId = params?.roomId;
-
-  if (!roomId) {
-    return NextResponse.json(
-      { error: "Missing roomId in URL" },
-      { status: 400 }
-    );
-  }
-
+export async function POST(req: NextRequest) {
   try {
-    const { userId } = await req.json();
+    // Extract roomId from URL
+    const url = new URL(req.url);
+    const pathParts = url.pathname.split("/"); // ["", "api", "rooms", "ROOM_ID", "join"]
+    const roomId = pathParts[3];
 
+    if (!roomId) {
+      return NextResponse.json(
+        { error: "Missing roomId in URL" },
+        { status: 400 }
+      );
+    }
+
+    const { userId } = await req.json();
     if (!userId) {
       return NextResponse.json(
         { error: "User ID is required" },
