@@ -196,7 +196,7 @@ export default function RestaurantSwiper({ roomId, userId }: Props) {
 
           <div className="flex justify-between mt-4 absolute bottom-20 left-25">
             <button onClick={() => swipe(false)} className="btn btn-error w-24">
-              ❌
+              X
             </button>
             <button onClick={() => swipe(true)} className="btn btn-success w-24">
               ❤️

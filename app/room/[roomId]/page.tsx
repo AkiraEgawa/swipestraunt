@@ -15,7 +15,6 @@ export default function RoomPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const params = useParams();
-  console.log(params);
   const userId = searchParams.get("userId");
   const roomId = params?.roomId;
 
@@ -27,7 +26,7 @@ export default function RoomPage() {
   useEffect(() => {
     if (!roomId) return;
 
-    fetch(`/api/rooms/${roomId}`)
+    fetch(`${window.location.origin}/api/rooms/${roomId}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch room");
         return res.json();
@@ -37,23 +36,28 @@ export default function RoomPage() {
       .finally(() => setLoading(false));
   }, [roomId]);
 
+  // Delete room handler
   const handleCloseRoom = async () => {
-    console.log("roomId", roomId);
     if (!roomId) {
       alert("Room ID not available yet!");
       return;
     }
 
     try {
-      const res = await fetch(`/api/rooms/${roomId}`, { method: "DELETE" });
+      const url = `${window.location.origin}/api/rooms/${roomId}`;
+      console.log("Deleting room at URL:", url);
+
+      const res = await fetch(url, { method: "DELETE" });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data?.error || "Failed to close room");
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to close room");
       }
 
-      router.push(`/create-room?userId=${userId}`); // back to creation page
+      alert("Room closed successfully!");
+      router.push(`/create-room?userId=${userId}`);
     } catch (err: any) {
+      console.error("Delete room error:", err);
       alert(err.message);
     }
   };
@@ -70,7 +74,10 @@ export default function RoomPage() {
         <h1 className="text-black font-bold mb-4 flex items-center gap-2">
           Room {room.id}
           <button
-            onClick={() => navigator.clipboard.writeText(room.id)}
+            onClick={() => {
+              navigator.clipboard.writeText(room.id);
+              alert("Room ID copied!");
+            }}
             className="px-2 py-1 bg-gray-200 rounded border border-gray-400 hover:bg-gray-300 transition"
             title="Copy Room ID"
           >
