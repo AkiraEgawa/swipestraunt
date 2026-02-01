@@ -1,23 +1,37 @@
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: Request, ctx: { params: { roomId: string } }) {
-  const { roomId } = ctx.params;
-  const restaurantId = new URL(req.url).searchParams.get("restaurantId");
-  if (!restaurantId) return NextResponse.json({ matched: false });
+export async function GET(req: NextRequest) {
+  // Parse the URL manually
+  const url = new URL(req.url);
+  const pathParts = url.pathname.split("/"); // ["", "api", "rooms", "ROOM_ID", "matches"]
+  const roomId = pathParts[3];
 
-  // Check if any other member liked the same restaurant
- const swipes = await prisma.swipe.findMany({
-  where: {
-    roomId,
-    restaurantId: String(restaurantId), // make sure this is string
-    choice: true,
-  },
-});
+  if (!roomId) {
+    return NextResponse.json({ matched: false });
+  }
 
+  const restaurantId = url.searchParams.get("restaurantId");
+  if (!restaurantId) {
+    return NextResponse.json({ matched: false });
+  }
 
-  // Matched if at least 2 users liked it
-  const matched = swipes.length >= 2;
+  try {
+    // Check if any other member liked the same restaurant
+    const swipes = await prisma.swipe.findMany({
+      where: {
+        roomId,
+        restaurantId: String(restaurantId),
+        choice: true,
+      },
+    });
 
-  return NextResponse.json({ matched });
+    // Matched if at least 2 users liked it
+    const matched = swipes.length >= 2;
+
+    return NextResponse.json({ matched });
+  } catch (err) {
+    console.error("🔥 Match Check Error:", err);
+    return NextResponse.json({ matched: false });
+  }
 }
