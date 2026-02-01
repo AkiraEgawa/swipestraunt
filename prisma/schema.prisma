@@ -22,6 +22,8 @@ model Room {
   createdAt DateTime     @default(now())
   location  String       @default("Unknown")
   range     Float        @default(5)
+  lat       Float?       // added latitude
+  lon       Float?       // added longitude
   members   RoomMember[]
   swipes    Swipe[]
 }
@@ -30,25 +32,23 @@ model RoomMember {
   id      String @id @default(uuid())
 
   user    User   @relation(fields: [userId], references: [id])
-  userId String
+  userId  String
 
   room    Room   @relation(fields: [roomId], references: [id])
-  roomId String
+  roomId  String
 
   @@unique([userId, roomId])
 }
 
 model Swipe {
   id        String   @id @default(uuid())
-
   user      User     @relation(fields: [userId], references: [id])
-  userId   String
-
+  userId    String
   room      Room     @relation(fields: [roomId], references: [id])
-  roomId   String
-
+  roomId    String
+  restaurantId String
   choice    Boolean
   createdAt DateTime @default(now())
-
-  @@unique([userId, roomId]) // one swipe per user per room
+  @@unique([userId, roomId, restaurantId]) // one swipe per user per restaurant in a room
 }
+
