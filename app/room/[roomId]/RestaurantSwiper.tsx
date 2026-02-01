@@ -38,7 +38,10 @@ export default function RestaurantSwiper({ roomId, userId }: Props) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [match, setMatch] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(true);
+  const [flash, setFlash] = useState(false);
+  const [shutter, setShutter] = useState(false);
 
+  // Load restaurants
   useEffect(() => {
     let cancelled = false;
 
@@ -48,14 +51,11 @@ export default function RestaurantSwiper({ roomId, userId }: Props) {
         const res = await fetch(`/api/rooms/${roomId}/restaurants`);
         const data = await res.json();
 
-        // If API returns an error, retry after 2s
         if (res.status !== 200 || data.error) {
-          console.warn("Restaurants API error:", data.error);
           if (!cancelled) setTimeout(loadRestaurants, 2000);
           return;
         }
 
-        // Safe default to prevent map crash
         const restaurantsData = Array.isArray(data.restaurants)
           ? data.restaurants
           : [];
@@ -73,22 +73,28 @@ export default function RestaurantSwiper({ roomId, userId }: Props) {
           setCurrentIndex(0);
           setLoading(false);
         }
-      } catch (err) {
-        console.error("Fetch failed, retrying...", err);
+      } catch {
         if (!cancelled) setTimeout(loadRestaurants, 2000);
       }
     };
 
     loadRestaurants();
-
     return () => {
       cancelled = true;
     };
   }, [roomId]);
 
+  // Swipe handler
   const swipe = async (choice: boolean) => {
     const restaurant = restaurants[currentIndex];
     if (!restaurant) return;
+
+    if (choice) {
+      setFlash(true);
+      setShutter(true);
+      setTimeout(() => setFlash(false), 120);
+      setTimeout(() => setShutter(false), 350);
+    }
 
     await fetch(`/api/swipes`, {
       method: "POST",
@@ -106,14 +112,19 @@ export default function RestaurantSwiper({ roomId, userId }: Props) {
         `/api/rooms/${roomId}/matches?restaurantId=${restaurant.id}`
       );
       const data = await res.json();
-      if (data.matched) setMatch(restaurant);
+      if (data.matched) {
+        setMatch(restaurant);
+        return;
+      }
     }
 
-    setCurrentIndex((prev) => prev + 1);
+    setTimeout(() => {
+      setCurrentIndex((prev) => prev + 1);
+    }, choice ? 380 : 0);
   };
 
   if (loading) return <p className="p-8">Loading restaurants...</p>;
-  if (match) {
+  if (match)
     return (
       <div className="p-8 text-center">
         <h2 className="text-xl font-bold mb-4">It's a Match! 🎉</h2>
@@ -124,12 +135,14 @@ export default function RestaurantSwiper({ roomId, userId }: Props) {
         />
         <p className="font-semibold">{match.name}</p>
         {match.cuisine && <p className="text-gray-600">{match.cuisine}</p>}
-        <button className="btn btn-primary mt-4" onClick={() => setMatch(null)}>
+        <button
+          className="btn btn-primary mt-4"
+          onClick={() => setMatch(null)}
+        >
           Continue Swiping
         </button>
       </div>
     );
-  }
 
   if (currentIndex >= restaurants.length)
     return <p className="p-8">No more restaurants!</p>;
@@ -137,21 +150,59 @@ export default function RestaurantSwiper({ roomId, userId }: Props) {
   const current = restaurants[currentIndex];
 
   return (
-    <div className="p-8 max-w-sm mx-auto border rounded shadow">
-      <img
-        src={current.image}
-        alt={current.name}
-        className="w-full h-64 object-cover rounded mb-4"
-      />
-      <h2 className="font-bold text-lg mb-1">{current.name}</h2>
-      {current.cuisine && <p className="text-gray-600 mb-4">{current.cuisine}</p>}
-      <div className="flex justify-between">
-        <button onClick={() => swipe(false)} className="btn btn-error w-24">
-          ❌
-        </button>
-        <button onClick={() => swipe(true)} className="btn btn-success w-24">
-          ❤️
-        </button>
+    <div className="min-h-screen flex justify-center pt-10">
+      <div
+        className="relative max-w-sm w-full h-[560px] rounded-xl shadow-2xl overflow-hidden"
+        style={{
+          backgroundImage: "url('/Film.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        {/* FLASH overlay */}
+        {flash && (
+          <div className="absolute inset-0 bg-white z-50 animate-flash pointer-events-none" />
+        )}
+
+        {/* SHUTTERS overlay */}
+        {shutter && (
+          <>
+            <div className="absolute top-0 left-0 w-full h-1/2 bg-black z-40 animate-shutter-top" />
+            <div className="absolute bottom-0 left-0 w-full h-1/2 bg-black z-40 animate-shutter-bottom" />
+          </>
+        )}
+
+        {/* TOP: Image */}
+        <div className="absolute top-1.5 left-12 w-full h-1/2 p-4">
+          <div className="w-full h-full overflow-hidden rounded-md">
+            <img
+              src={current.image}
+              alt={current.name}
+              className="w-[72.5%] h-[100%] object-cover"
+            />
+          </div>
+        </div>
+
+        {/* BOTTOM: Text + buttons */}
+        <div className="absolute bottom-0 left-0 w-full h-1/2 p-6 flex flex-col justify-between">
+          <div className="absolute inset-0 flex flex-col justify-end items-center pb-45">
+            <h2 className="text-black font-bold text-xl drop-shadow max-w-[60%] text-center">
+              {current.name}
+            </h2>
+            {current.cuisine && (
+              <p className="text-black text-sm max-w-[80%] wrap-break-words text-center">{current.cuisine}</p>
+            )}
+          </div>
+
+          <div className="flex justify-between mt-4 absolute bottom-20 left-25">
+            <button onClick={() => swipe(false)} className="btn btn-error w-24">
+              ❌
+            </button>
+            <button onClick={() => swipe(true)} className="btn btn-success w-24">
+              ❤️
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

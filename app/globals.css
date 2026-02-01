@@ -20,7 +20,35 @@
 }
 
 body {
-  background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+@keyframes flash {
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.animate-flash {
+  animation: flash 0.15s ease-out;
+}
+
+@keyframes shutterTop {
+  0% { transform: translateY(-100%); }
+  40% { transform: translateY(0); }
+  100% { transform: translateY(-100%); }
+}
+
+@keyframes shutterBottom {
+  0% { transform: translateY(100%); }
+  40% { transform: translateY(0); }
+  100% { transform: translateY(100%); }
+}
+
+.animate-shutter-top {
+  animation: shutterTop 0.35s ease-in-out;
+}
+
+.animate-shutter-bottom {
+  animation: shutterBottom 0.35s ease-in-out;
 }

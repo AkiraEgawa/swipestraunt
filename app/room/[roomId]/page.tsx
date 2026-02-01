@@ -65,15 +65,17 @@ export default function RoomPage() {
   if (!room) return <p>Room not found</p>;
 
   return (
-    <div className="p-8 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Room {room.id}</h1>
+  <div className="min-h-screen flex justify-center">
+    <div className="max-w-xl w-full mx-auto text-black">
+      <h1 className="text-black font-bold mb-4">Room {room.id}</h1>
 
-      <p className="mb-4">Created at: {new Date(room.createdAt).toLocaleString()}</p>
-
-      <button className="btn btn-error" onClick={handleCloseRoom}>
+      <button className="btn btn-error mb-4" onClick={handleCloseRoom}>
         Close Room
       </button>
+
       <RestaurantSwiper roomId={room.id} userId={userId!} />
     </div>
-  );
+  </div>
+);
+
 }
