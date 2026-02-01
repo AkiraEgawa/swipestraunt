@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import RestList from "./restList"
+import RestaurantSwiper from "./RestaurantSwiper";
 
 type Room = {
   id: string;
@@ -73,7 +74,7 @@ export default function RoomPage() {
       <button className="btn btn-error" onClick={handleCloseRoom}>
         Close Room
       </button>
-      <RestList roomId={room.id} />
+      <RestaurantSwiper roomId={room.id} userId={userId!} />
     </div>
   );
 }

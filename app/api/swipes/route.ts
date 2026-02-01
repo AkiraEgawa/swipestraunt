@@ -1,49 +1,35 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const body = await req.json()
-    const { userId, roomId, choice } = body
+    const { userId, roomId, restaurantId, choice } = await req.json();
 
-    if (!userId || !roomId || typeof choice !== "boolean") {
-      return NextResponse.json(
-        { error: "userId, roomId, and choice are required" },
-        { status: 400 }
-      )
+    if (!userId || !roomId || !restaurantId) {
+      return NextResponse.json({ error: "Missing parameters" }, { status: 400 });
     }
 
-    const swipe = await prisma.swipe.create({ // swipes will have userID, roomID, and their choice (yes or no)
-      data: {
+    // Convert restaurantId to string before upserting
+    const swipe = await prisma.swipe.upsert({
+      where: {
+        userId_roomId_restaurantId: {
+          userId,
+          roomId,
+          restaurantId: String(restaurantId), // ✅ cast to string
+        },
+      },
+      update: { choice },
+      create: {
         userId,
         roomId,
+        restaurantId: String(restaurantId), // ✅ cast to string
         choice,
       },
-    })
+    });
 
-    const yesCount = await prisma.swipe.count({ // count yes
-      where: {
-        roomId,
-        choice: true,
-      },
-    })
-
-    return NextResponse.json({
-      swipe,
-      match: yesCount === 2,
-    })
-  } catch (error: any) {
-    if (error.code === "P2002") {
-      return NextResponse.json(
-        { error: "User already swiped in this room" },
-        { status: 409 }
-      )
-    }
-
-    console.error(error)
-    return NextResponse.json(
-      { error: "Failed to submit swipe" },
-      { status: 500 }
-    )
+    return NextResponse.json({ swipe });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: "Failed to save swipe" }, { status: 500 });
   }
 }
