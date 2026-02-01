@@ -5,7 +5,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = "postgresql://postgres:mypassword@localhost:5432/swipestraunt?schema=public"
+  url      = env("DATABASE_URL")
 }
 
 model User {

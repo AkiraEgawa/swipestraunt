@@ -12,6 +12,11 @@ export default function CreateRoomPage() {
   const [location, setLocation] = useState("")
   const [range, setRange] = useState(5) // default 5 km
 
+  const gotoJoin = async () => {
+    router.push(`/join-room?userId=${userId}`)
+
+  }
+
   const handleCreateRoom = async () => {
     if (!userId) {
       alert("User ID is required")
@@ -56,6 +61,12 @@ export default function CreateRoomPage() {
         backgroundRepeat: "no-repeat",
       }}
     >
+      <h1 className="text-2xl mb-4 text-black font-bold">Join a Room</h1>
+      {/* Room Join Button */}
+      <button
+        className="btn btn-primary w-64"
+        onClick={gotoJoin}
+      ></button >
       <h1 className="text-2xl mb-4 text-black font-bold">Create a Room</h1>
 
       {/* Location input */}
